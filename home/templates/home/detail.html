@@ -1,0 +1,105 @@
+{% extends 'home/base.html'%}
+
+{% load static %}
+
+{% block title %}
+    {{ room.property_name }}
+{% endblock %}
+
+{% block head %}
+<script type="text/javascript" src="{% static 'home/js/detail.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+<div class="w-100" style="height:50px;"></div>
+<div class="row">
+    <div class="col-md-8 col-sm-12">
+        <div class="row">
+            <div class="col-md-12">
+                <img class="rounded" src="{{ roomImages.0.image.url }}">
+            </div>
+            <div class="w-100" style="height:30px;"></div>
+            <div class="col-md-12">
+                <div id="imageGrid" class="row">
+                    {% for image in roomImages %}
+                        <div class="col-4"><img id="image{{ forloop.counter0 }}" class="expandable-image img-thumbnail" src="{{ image.image.url }}"></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-12">
+        <div class="card bg-light">
+            <div class="card-body">
+            <h4 class="card-title">Host Contact Details</h4><br>
+            {% if user.is_authenticated %}
+                <h5 class="card-subtitle mb-2">{{ room.host_name }}</h5>
+                <h5 class="card-subtitle mb-2 text-2">Nearby College <span class="badge badge-dark">{{ room.nearby_college }}</span></h5>
+                <h5 class="card-subtitle mb-2 text-muted">Host Studies <span class="badge badge-dark">{{ room.creator_major }}</span></h5>
+                <h5 class="card-subtitle mb-2 text-muted">Year <span class="badge badge-dark">{{ room.creator_year }}</span></h5>
+                <h5 class="card-subtitle mb-2 text-muted">Host is {% if room.creator_gender == 'm' %}<span class="badge badge-primary">Male
+                        {%elif room.creator_gender == 'f'%}<span class="badge badge-danger">Female
+                        {% else %}<span class="badge badge-info">Other{%endif%}</span></h5>
+                <p id="address" class="card-text">{{ room.address }}</p>
+                <div id="map"></div><br>
+                <p>{{room.creator_email}}<br>
+                {% if room.creator_phone %}{{room.creator_phone}}{% else %}Host did not provide a phone number{% endif %}</p>
+            {% else %}
+                <a href="{% url 'signin' %}"><button class="btn btn-danger">Sign In to See Host Info</button></a>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="w-100" style="height:50px;"></div>
+    <div class="col-md-12 col-sm-12">
+        <h3>{% if room.property_type == 'a' %}Apartment
+                {% elif room.property_type == 'c' %}Condo
+                {% elif room.property_type == 't' %}Townhouse
+                {% else %} house {% endif %} - ${{room.cost}}/m</h3><br>
+        <h5>{%if room.description%}{{ room.description }}{%else%}Sorry! The host didn't provide a description{%endif%}</h5><br>
+        <h5><span class="badge badge-danger">{{room.number_of_rooms}}</span> Room(s) Available</h5>
+        <h5><span class="badge badge-danger">{{room.garages}}</span> Parking Spot(s)</h5>
+    </div>
+</div>
+<br>
+<script>
+    function initMap() {
+        var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 15,
+        center: {lat: 43.7735, lng: -79.5}
+        });
+        var geocoder = new google.maps.Geocoder();
+        geocodeAddress(geocoder, map);
+    }
+
+    function geocodeAddress(geocoder, resultsMap) {
+        var address = document.getElementById('address').innerHTML;
+        geocoder.geocode({'address': address}, function(results, status) {
+        if (status === 'OK') {
+            resultsMap.setCenter(results[0].geometry.location);
+            var marker = new google.maps.Marker({
+            map: resultsMap,
+            position: results[0].geometry.location
+            });
+        } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+        }
+        });
+    }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdgUnGmwFjRBhpJ5lQu_5sJ3GNzn6k5bI&callback=initMap">
+    </script>
+<br>
+<div class="row">
+    <div class="col-12">
+        <p class="text-muted">Last updated: {{ room.last_updated.date }}</p>
+    </div>
+</div>
+
+<div id="overlay">
+    <div class="container" id="image-container">
+    </div>
+</div>
+
+{% endblock %}

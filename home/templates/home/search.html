@@ -1,0 +1,328 @@
+{% extends 'home/base.html'%} {% load static %}
+<!-- REMOVE whenwe implement database images -->
+
+{% block head %}
+    <script type="text/javascript" src="{% static 'home/js/search.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+
+<div class="container-fluid">
+    <div class="w-100" style="height:100px;"></div>
+    <div class="col">
+    </div>
+
+    <form class="form-inline" method="GET" action="{% url 'search' %}">
+        <div class="col">
+            <input type="search" name="q" class="form-control form-control-lg" id="mainSearchBar" aria-describedby="searchHelp" placeholder="Try &quot;north york&quot;"
+                autocomplete="off">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-danger form-control-lg" id="mainSearchButton">Search</button>
+        </div>
+        {% if sort != 'none' %}
+            <input type="hidden" name="sort" value="{{ sort }}">
+        {% endif %}
+        {% if filters is not None %}
+            <input type="hidden" name="filter" value="{{ filters }}">
+        {% endif %}
+
+    </form>
+
+    <div class="w-100" style="height:40px;"></div>
+    <div class="btn-group float-right">
+        <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            {% if sort == 'last'%} Last Updated
+            {% elif sort == 'l2h'%} Price: Low to High
+            {% elif sort == 'h2l'%} Price: High to Low
+            {% else %} Sort By
+            {% endif %}
+        </button>
+        <div class="dropdown-menu">
+            <a class="dropdown-item" href="{% url 'search' %}?q={{ query }}{% if filters is not None %}&filter={{ filters }}{% endif %}&sort=last">Last Updated</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'search'  %}?q={{ query }}{% if filters is not None %}&filter={{ filters }}{% endif %}&sort=l2h">Price: Low to High</a>
+            <a class="dropdown-item" href="{% url 'search' %}?q={{ query }}{% if filters is not None %}&filter={{ filters }}{% endif %}&sort=h2l">Price: High to Low</a>
+        </div>
+    </div>
+    <div class="w-100" style="height:60px;"></div>
+
+    {% if sf == 's' %}
+        <h2>Search Results:</h2>
+        <h5>
+            There {% if num_results != 1%}are {{ num_results }} rooms that match{%else%}is 1 room that matches{% endif %} "{{ query }}".
+        </h5>
+    {% elif sf == 'f' %}
+        <h2>Filter Results:</h2>
+        <h5>
+            There {% if num_results != 1%}are {{ num_results }} rooms that satisfy{%else%}is 1 room that satisfies{% endif %} your filters.
+        </h5>
+    {% elif sf == 'sf' %}
+        <h2>Filtered Search Results:</h2>
+        <h5>
+            There {% if num_results != 1%}are {{ num_results }} rooms that match{%else%}is 1 room that matches{% endif %} "{{ query }}"
+            and satisf{% if num_results == 1%}ies{%else%}y{%endif%} your filters.
+        </h5>
+    {% endif %}
+
+    <div class="row">
+        <div class='col-md-9 col-sm-10'>
+        <div class="list-group list-group-flush">
+            {% for room in rooms %}
+            <div class="list-group-item bg-light">
+                <div class="row">
+                    <div class="col-12 col-md-2">
+                        <a href="{% url 'detail' room.id %}">
+                            <div class="img-thumbnail">
+                                <img src="{{ room.roomimage_set.all.0.image.url }}" alt="pic">
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="pl-3 col-12 col-md-10">
+                        <a href="{% url 'detail' room.id %}">
+                            <h4 class="card-title m-1">{{ room.property_name }}</h4>
+                        </a>
+                        <p class="m-1">{{ room.address}}</p>
+                        <p class="m-1">${{ room.cost}}</p>
+                        <p class="m-1">{% if room.property_type == 'a' %}Apartment
+                            {% elif room.property_type == 'c' %}Condo
+                            {% elif room.property_type == 't' %}Townhouse
+                            {% else %} House {% endif %}</p>
+                        <p class="m-1">{{ room.number_of_rooms}} Room(s) | {{ room.garages }} Parking</p>
+                  </div>
+                </div>
+                <p class="text-muted m-0 pt-2">Last Updated: {{room.last_updated.date}}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <div class="col-md-3 col-sm-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                <h4 class="card-title text-center">Filter</h4><br>
+                    <div class="buttonalign">
+                        <div class="form-button">
+                            <form id='filterForm' method="GET" action="{% url 'search' %}">
+                                <input type="hidden" name="q" value="{{ query }}">
+                                {% if sort != 'none' %}
+                                    <input type="hidden" name="sort" value="{{ sort }}">
+                                {% endif %}
+                                <input id='filter_for_form' type="hidden" name="filter" value="">
+                                <button class="btn btn-md btn-primary btn-block" id='filter_submit'>Apply Filters</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <br>
+
+                    <h6 class="card-text">Price</h6>
+                    <div class="form-check">
+                        <div class="row">
+                            <div class="col">
+                                <input name="exampleMin" type="text" class="form-control" id="minPrice" placeholder="$Min">
+                            </div>
+                            <div class="col">
+                                <label for="min" class="sr-only">$</label>
+                                <input name="exampleMax" type="text" class="form-control" id="maxPrice" placeholder="$Max">
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <h6 class="card-text">Type</h6>
+                    <div class="form-check">
+                        <input id='apart' name="exampleRadio1" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            Apartment
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='condo' name="exampleRadio2" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            Condo
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='house' name="exampleRadio3" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            House
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='town' name="exampleRadio4" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            Townhouse
+                        </label>
+                    </div>
+
+                    <br>
+
+                    <h6 class="card-text">Gender</h6>
+                    <div class="form-check">
+                        <input id='male' name="exampleRadio1" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            Male
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='female' name="exampleRadio2" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            Female
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='other' name="exampleRadio3" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            Other
+                        </label>
+                    </div>
+
+                    <br>
+
+                    <h6 class="card-text">Parking</h6>
+                    <div class="form-check">
+                        <input id='park1' name="exampleRadio1" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            1 Space
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='park2' name="exampleRadio2" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            2 Spaces
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='park3' name="exampleRadio3" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            3 Spaces
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='park4' name="exampleRadio3" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            4+ Spaces
+                        </label>
+                    </div>
+
+                    <br>
+
+                    <h6 class="card-text">Rooms</h6>
+                    <div class="form-check">
+                        <input id='room1' name="exampleRadio1" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            1 Room
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='room2' name="exampleRadio2" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            2 Rooms
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='room3' name="exampleRadio3" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            3 Rooms
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input id='room4' name="exampleRadio3" class="form-check-input" type="checkbox" value="">
+                        <label class="form-check-label" for="defaultCheck1">
+                            4+ Rooms
+                        </label>
+                    </div>
+                    <br>
+                    <div class="buttonalign">
+                        <div class="form-button">
+                            <a href="{% url 'search' %}?q={{ query }}{% if sort != 'none' %}&sort={{ sort }}{% endif %}"><button class="btn btn-md btn-block btn-danger" name="clear">Clear</button></a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+</div>
+
+
+    <div class="row" id="pagination-navbar">
+        {% if rooms.has_other_pages %}
+        <nav class="align-bottom" aria-label="...">
+            <ul class="pagination">
+                {% if rooms.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?q={{ query }}{% if filters is not None %}&filter={{ filters }}{% endif %}{% if sort != 'none' %}&sort={{ sort }}{% endif %}&page={{ rooms.previous_page_number }}">Previous</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">Previous</a>
+                </li>
+                {% endif %}
+                {% for i in rooms.paginator.page_range %}
+                    {% if rooms.number == i %}
+                <li class="page-item active">
+                    <a class="page-link" href=>{{ i }}</a>
+                </li>
+                    {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?q={{ query }}{% if filters is not None %}&filter={{ filters }}{% endif %}&page={{ i }}">{{ i }}</a>
+                </li>
+                    {% endif %}
+                {% endfor %}
+                {% if rooms.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?q={{ query }}{% if filters is not None %}&filter={{ filters }}{% endif %}&page={{ rooms.next_page_number }}">Next</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+<script>
+
+        // booleans
+        var price_range_low = "{{ prl }}";
+        var price_range_high = "{{ prh }}";
+        var gen_male = "{{ gen_m }}";
+        var gen_female = "{{ gen_f }}";
+        var gen_other = "{{ gen_o }}";
+        var type_house = "{{ type_h }}";
+        var type_townhouse = "{{ type_t }}";
+        var type_apartment = "{{ type_a }}";
+        var type_condo = "{{ type_c }}";
+        var rms_1 = "{{ rms_1 }}";
+        var rms_2 = "{{ rms_2 }}";
+        var rms_3 = "{{ rms_3 }}";
+        var rms_4 = "{{ rms_4 }}";
+        var par_1 = "{{ par_1 }}";
+        var par_2 = "{{ par_2 }}";
+        var par_3 = "{{ par_3 }}";
+        var par_4 = "{{ par_4 }}";
+
+        if(price_range_low != '0') document.getElementById('minPrice').value = price_range_low;
+        if(price_range_high != '99999') document.getElementById('maxPrice').value = price_range_high;
+        if(gen_male=='true') document.getElementById('male').checked = true;
+        if(gen_female=='true') document.getElementById('female').checked = true;
+        if(gen_other=='true') document.getElementById('other').checked = true;
+        if(type_house=='true') document.getElementById('house').checked = true;
+        if(type_townhouse=='true') document.getElementById('town').checked = true;
+        if(type_condo=='true') document.getElementById('condo').checked = true;
+        if(type_apartment=='true') document.getElementById('apart').checked = true;
+        if(rms_1=='true') document.getElementById('room1').checked = true;
+        if(rms_2=='true') document.getElementById('room2').checked = true;
+        if(rms_3=='true') document.getElementById('room3').checked = true;
+        if(rms_4=='true') document.getElementById('room4').checked = true;
+        if(par_1=='true') document.getElementById('park1').checked = true;
+        if(par_2=='true') document.getElementById('park2').checked = true;
+        if(par_3=='true') document.getElementById('park3').checked = true;
+        if(par_4=='true') document.getElementById('park4').checked = true;
+
+    </script>
+{% endblock %}
