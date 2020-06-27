@@ -1,1 +1,1 @@
-web: gunicorn roomiee.yuroomie.wsgi
+web: gunicorn yuroomie.wsgi
