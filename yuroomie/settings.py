@@ -25,7 +25,7 @@ SECRET_KEY = 'evhkb5hua3etolk^h%uu02b68s3g48u#1r92d$=ip%8vii$$jq'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'roomiee.herokuapp.com/']
+ALLOWED_HOSTS = ['127.0.0.1', 'roomiee.herokuapp.com']
 
 
 # Application definition
