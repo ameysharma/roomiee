@@ -1,5 +1,5 @@
-django==2.0.2
-Pillow==7.0.0
-gunicorn
 pip
+django==2.0.2
+pillow
+gunicorn
 django-heroku
