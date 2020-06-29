@@ -1,1 +1,1 @@
-web: gunicorn yuroomie.wsgi.application
+web: gunicorn yuroomie.wsgi
