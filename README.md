@@ -1,6 +1,6 @@
-# YURoomie
+#Roomie
 
-YURoomie is a dynamic Django website created for York University's annual 2 day hackathon (Steacie Library Hackfest 2018).
+Roomie is a dynamic Django website created for York University's annual 2 day hackathon (Steacie Library Hackfest 2018).
 
 The website was created for the purpose of helping students find roommates attending the same school.
 
